@@ -231,7 +231,48 @@ func TestWebSocketFlow(t *testing.T) {
 	}
 }
 
-func TestCreateRateLimiter(t *testing.T) {
+func TestSetOutputControl(t *testing.T) {
+	p := party.NewParty("OUTPUT")
+	host, err := p.Join("user1", "device1", "Host", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	listener, err := p.Join("user2", "device2", "Listener", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ok, code, _ := applyControl(p, listener, protocol.ActionSetOutput, map[string]interface{}{
+		"memberId": host.MemberId,
+	})
+	if ok || code != "host_only" {
+		t.Fatalf("listener setOutput = (%v, %q), want (false, host_only)", ok, code)
+	}
+
+	ok, code, message := applyControl(p, host, protocol.ActionSetOutput, map[string]interface{}{
+		"memberId": listener.MemberId,
+	})
+	if !ok {
+		t.Fatalf("host setOutput failed: %s: %s", code, message)
+	}
+	if p.OutputMemberId != listener.MemberId {
+		t.Fatalf("output = %q, want %q", p.OutputMemberId, listener.MemberId)
+	}
+
+	frame := membersFrame(p)
+	if frame["outputMemberId"] != listener.MemberId {
+		t.Fatalf("members frame output = %v, want %q", frame["outputMemberId"], listener.MemberId)
+	}
+
+	ok, code, _ = applyControl(p, host, protocol.ActionSetOutput, map[string]interface{}{
+		"memberId": "missing",
+	})
+	if ok || code != "member_not_found" {
+		t.Fatalf("unknown output = (%v, %q), want (false, member_not_found)", ok, code)
+	}
+}
+
+t *testing.T) {
 	limiter := newIPRateLimiter(time.Minute, 2, 100)
 	if !limiter.Allow("203.0.113.10") || !limiter.Allow("203.0.113.10") {
 		t.Fatal("expected the first two creations from an IP to be allowed")
