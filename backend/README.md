@@ -166,8 +166,8 @@ member. Leaving clears the assignment. An empty `outputMemberId` means no
 output has been selected and preserves the existing party behaviour. Older
 clients ignore the additional field and continue to work as before.
 
-The flag travels on the `members` frame, alongside `maxMembers`, and in the
-snapshot; it is deliberately not on the state frame, which rides the heartbeat.
+`hostOnlyControl` travels on the `members` frame, alongside `maxMembers`, and in
+the snapshot; it is deliberately not on the state frame, which rides the heartbeat.
 Absent from either — an older server — it reads as `false`, which is the
 behaviour the feature shipped with.
 
