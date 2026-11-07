@@ -43,6 +43,7 @@ const (
 	ActionSetMaxMembers = "setMaxMembers"
 	ActionSetAutoplay = "setAutoplay"
 	ActionSetHostOnlyControl = "setHostOnlyControl"
+	ActionSetOutput          = "setOutput"
 )
 
 // ControlActions are the actions a party's HostOnlyControl setting restricts to
