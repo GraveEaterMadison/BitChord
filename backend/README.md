@@ -153,7 +153,7 @@ Client → server:
 {"type": "control", "action": "setOutput", "memberId": "…"}            // host only; "" clears
 ```
 
-`setMaxMembers`, `kick` and `setHostOnlyControl` are host-only and answer
+`setMaxMembers`, `kick`, `setHostOnlyControl` and `setOutput` are host-only and answer
 `403 host_only` to anybody else. While `hostOnlyControl` is on, so is every
 action above them in that list — `play`, `pause`, `seek`, `setTrack`,
 `setQueue`, `queueAdd`, `queueRemove`, `queueClear`, `queueMove`, `next`,
