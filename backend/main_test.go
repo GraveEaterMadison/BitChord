@@ -15,6 +15,7 @@ import (
 
 	"github.com/KabirSinghBhatia/BitChord/backend/clock"
 	"github.com/KabirSinghBhatia/BitChord/backend/config"
+	"github.com/KabirSinghBhatia/BitChord/backend/party"
 	"github.com/KabirSinghBhatia/BitChord/backend/presence"
 	"github.com/KabirSinghBhatia/BitChord/backend/protocol"
 )
