@@ -273,7 +273,7 @@ func TestSetOutputControl(t *testing.T) {
 	}
 }
 
-t *testing.T) {
+func TestCreateRateLimiter(t *testing.T) {
 	limiter := newIPRateLimiter(time.Minute, 2, 100)
 	if !limiter.Allow("203.0.113.10") || !limiter.Allow("203.0.113.10") {
 		t.Fatal("expected the first two creations from an IP to be allowed")
