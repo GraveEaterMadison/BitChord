@@ -993,7 +993,8 @@ func handleSocketFrame(p *party.Party, member *party.Member, sc *hub.SafeConn, f
 			hubInst.Broadcast(p.Code, stateFrame(p), "")
 			if action == protocol.ActionKick ||
 				action == protocol.ActionSetMaxMembers ||
-				action == protocol.ActionSetHostOnlyControl {
+				action == protocol.ActionSetHostOnlyControl ||
+				action == protocol.ActionSetOutput {
 				hubInst.Broadcast(p.Code, membersFrame(p), "")
 			}
 			hubInst.Broadcast(p.Code, activityFrame(member, action, frame), "")
@@ -1170,6 +1171,17 @@ func applyControl(p *party.Party, member *party.Member, action string, frame map
 		p.Playback.SetAutoplay(&member.MemberId, enabled)
 		return true, "", ""
 
+	case protocol.ActionSetOutput:
+		targetID, ok := frame["memberId"].(string)
+		if !ok {
+			return false, "invalid_output", "Choose a device in this party."
+		}
+		if err := p.SetOutput(member, targetID); err != nil {
+			pe := err.(*party.PartyError)
+			return false, pe.Code, pe.Message
+		}
+		return true, "", ""
+
 	case protocol.ActionSetHostOnlyControl:
 		enabled, ok := frame["enabled"].(bool)
 		if !ok {
@@ -1261,6 +1273,7 @@ func membersFrame(p *party.Party) map[string]interface{} {
 		"members":         membersList,
 		"maxMembers":      p.MaxMembers,
 		"hostOnlyControl": p.HostOnlyControl,
+		"outputMemberId":  p.OutputMemberId,
 		"serverMs":        clock.NowMs(),
 	}
 }
