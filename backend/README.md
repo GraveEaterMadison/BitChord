@@ -150,6 +150,7 @@ Client → server:
 {"type": "control", "action": "next"}
 {"type": "control", "action": "previous"}
 {"type": "control", "action": "setHostOnlyControl", "enabled": true}   // host only
+{"type": "control", "action": "setOutput", "memberId": "…"}            // host only; "" clears
 ```
 
 `setMaxMembers`, `kick` and `setHostOnlyControl` are host-only and answer
@@ -158,6 +159,12 @@ action above them in that list — `play`, `pause`, `seek`, `setTrack`,
 `setQueue`, `queueAdd`, `queueRemove`, `queueClear`, `queueMove`, `next`,
 `previous` and `setAutoplay` — which is what makes the restriction real rather
 than a matter of the app hiding its own buttons.
+
+The selected output travels on the `members` frame and in the party
+snapshot. Only the host may change it; the target must be a current party
+member. Leaving clears the assignment. An empty `outputMemberId` means no
+output has been selected and preserves the existing party behaviour. Older
+clients ignore the additional field and continue to work as before.
 
 The flag travels on the `members` frame, alongside `maxMembers`, and in the
 snapshot; it is deliberately not on the state frame, which rides the heartbeat.
