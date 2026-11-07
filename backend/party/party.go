@@ -533,6 +533,9 @@ type Party struct {
 	// seconds. It travels with MaxMembers on the members frame instead, which
 	// is only sent when something about the membership actually changes.
 	HostOnlyControl bool
+	// OutputMemberId is the member whose device should produce audio.
+	// Empty preserves the existing Listen Together behaviour.
+	OutputMemberId  string
 	CreatedAtMs     int64
 	TouchedAtMs     int64
 	EmptySinceMs    *int64
@@ -645,6 +648,25 @@ func (p *Party) SetHostOnlyControl(member *Member, enabled bool) error {
 	return nil
 }
 
+// SetOutput assigns the audio output. Only the host may change it. An empty
+// memberId clears the assignment and restores the party's existing behaviour.
+func (p *Party) SetOutput(member *Member, memberId string) error {
+	if !member.IsHost {
+		return NewPartyError(403, "host_only", "Only the host can change the audio output.")
+	}
+	if memberId != "" {
+		if _, ok := p.Members[memberId]; !ok {
+			return NewPartyError(404, "member_not_found", "That device is no longer in this party.")
+		}
+	}
+	if p.OutputMemberId == memberId {
+		return nil
+	}
+	p.OutputMemberId = memberId
+	p.Touch()
+	return nil
+}
+
 // MayControl reports whether this member is allowed to drive playback and the
 // queue right now.
 //
@@ -670,6 +692,9 @@ func (p *Party) Remove(memberId string) *Member {
 		return nil
 	}
 	delete(p.Members, memberId)
+	if p.OutputMemberId == memberId {
+		p.OutputMemberId = ""
+	}
 	if m.IsHost && len(p.Members) > 0 {
 		for _, next := range p.Members {
 			next.IsHost = true
@@ -782,6 +807,7 @@ func (p *Party) ToWire() map[string]interface{} {
 		"createdAtMs":     p.CreatedAtMs,
 		"maxMembers":      p.MaxMembers,
 		"hostOnlyControl": p.HostOnlyControl,
+		"outputMemberId":  p.OutputMemberId,
 		"members":         membersWire,
 		"playback":        p.Playback.ToWire(now),
 		"queue":           p.Playback.QueueToWire(),
