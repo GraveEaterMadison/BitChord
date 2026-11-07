@@ -990,7 +990,9 @@ func handleSocketFrame(p *party.Party, member *party.Member, sc *hub.SafeConn, f
 			if p.Playback.QueueSeq != queueBefore {
 				hubInst.Broadcast(p.Code, queueFrame(p), "")
 			}
-			hubInst.Broadcast(p.Code, stateFrame(p), "")
+			if action != protocol.ActionSetOutput {
+				hubInst.Broadcast(p.Code, stateFrame(p), "")
+			}
 			if action == protocol.ActionKick ||
 				action == protocol.ActionSetMaxMembers ||
 				action == protocol.ActionSetHostOnlyControl ||
@@ -1231,6 +1233,8 @@ func activityFrame(member *party.Member, action string, frame map[string]interfa
 	switch action {
 	case protocol.ActionSetTrack:
 		if title := trackTitle(frame["track"]); title != "" { detail = "Changed the song to \"" + title + "\"" }
+	case protocol.ActionSetOutput:
+		detail = "Changed the audio output"
 	case protocol.ActionQueueAdd:
 		if tracks, ok := frame["tracks"].([]interface{}); ok && len(tracks) > 0 {
 			title := trackTitle(tracks[0])
