@@ -58,6 +58,59 @@ func TestPartyCreationAndJoin(t *testing.T) {
 	}
 }
 
+func TestPartyOutputDelegation(t *testing.T) {
+	p := NewParty("OUTPUT")
+	host, err := p.Join("user1", "device1", "Host", nil)
+	if err != nil {
+		t.Fatalf("host join failed: %v", err)
+	}
+	listener, err := p.Join("user2", "device2", "Listener", nil)
+	if err != nil {
+		t.Fatalf("listener join failed: %v", err)
+	}
+
+	if p.OutputMemberId != "" {
+		t.Fatalf("new party output should be unassigned, got %q", p.OutputMemberId)
+	}
+
+	if err := p.SetOutput(listener, host.MemberId); err == nil {
+		t.Fatal("non-host must not be allowed to change the output")
+	} else if pe, ok := err.(*PartyError); !ok || pe.Code != "host_only" {
+		t.Fatalf("expected host_only, got %v", err)
+	}
+
+	if err := p.SetOutput(host, "missing-member"); err == nil {
+		t.Fatal("unknown output member must be rejected")
+	} else if pe, ok := err.(*PartyError); !ok || pe.Code != "member_not_found" {
+		t.Fatalf("expected member_not_found, got %v", err)
+	}
+
+	if err := p.SetOutput(host, listener.MemberId); err != nil {
+		t.Fatalf("host could not assign listener as output: %v", err)
+	}
+	if p.OutputMemberId != listener.MemberId {
+		t.Fatalf("output = %q, want %q", p.OutputMemberId, listener.MemberId)
+	}
+	if got := p.ToWire()["outputMemberId"]; got != listener.MemberId {
+		t.Fatalf("wire output = %v, want %q", got, listener.MemberId)
+	}
+
+	if err := p.SetOutput(host, ""); err != nil {
+		t.Fatalf("host could not clear output: %v", err)
+	}
+	if p.OutputMemberId != "" {
+		t.Fatalf("cleared output = %q, want empty", p.OutputMemberId)
+	}
+
+	if err := p.SetOutput(host, listener.MemberId); err != nil {
+		t.Fatalf("host could not reassign output: %v", err)
+	}
+	p.Remove(listener.MemberId)
+	if p.OutputMemberId != "" {
+		t.Fatalf("output should clear when its member leaves, got %q", p.OutputMemberId)
+	}
+}
+
 func TestPartyCapacityLimit(t *testing.T) {
 	p := NewParty("TEST12")
 	for i := 0; i < config.MaxMembers; i++ {
